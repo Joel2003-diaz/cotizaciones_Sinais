@@ -93,7 +93,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Función para generar vista previa con diseño EXACTO
-    function generarVistaPrevia() {
+// Función para generar vista previa con diseño EXACTO - VERSIÓN CORREGIDA
+function generarVistaPrevia() {
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
 
@@ -125,9 +126,9 @@ document.addEventListener('DOMContentLoaded', function() {
     border:1px solid #000;
     table-layout:fixed;
 ">
-<tr style="height:10mm;"> <!-- 🔑 ALTURA FORZADA -->
+<tr style="height:30mm;"> <!-- Ajusté la altura -->
 
-<!-- LOGO -->
+<!-- LOGO - COLUMNA IZQUIERDA -->
 <td style="
     width:22%;
     border:1px solid #000;
@@ -136,17 +137,17 @@ document.addEventListener('DOMContentLoaded', function() {
     padding:0;
 ">
     <div style="
-        height:26mm;
+        height:100%;
         display:flex;
         align-items:center;
         justify-content:center;
+        padding:1mm;
     ">
         <img src="${LOGO_PATH}" style="
-            height:10mm;   /* 🔑 LO QUE REALMENTE MANDA */
-            width:auto;
+            max-height:25mm;   /* Ajuste para mantener proporción */
             max-width:100%;
-            display:block;
-        ">
+            object-fit:contain;
+        " onerror="this.style.display='none'">
     </div>
 </td>
 
@@ -156,10 +157,11 @@ document.addEventListener('DOMContentLoaded', function() {
     border:1px solid #000;
     text-align:center;
     font-size:9pt;
-    padding:2mm;
+    padding:3mm;
     vertical-align:middle;
+    line-height:1.4;
 ">
-    <b style="font-size:11pt;">COTIZACIONES</b><br>
+    <b style="font-size:11pt; display:block; margin-bottom:2mm;">COTIZACIONES</b>
     CLINICA REGIONAL DE ESPECIALISTAS SINAIS VITAIS S.A.S<br>
     NIT. 900498069-1<br>
     CALLE 18 # 16 - 09 BOSCONIA CESAR<br>
@@ -168,89 +170,89 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- DATOS DERECHA -->
 <td style="
-    width:22%;
+    width:20%;  /* Ajusté de 22% a 20% para mejor balance */
     border:1px solid #000;
     font-size:8pt;
-    padding:2mm;
+    padding:3mm;
     vertical-align:middle;
+    line-height:1.4;
 ">
     <b>Código:</b><br>
     <b>Versión:</b><br>
     <b>Fecha:</b> ${fecha}<br>
     <b>Página:</b> 1 de 1
 </td>
-
 </tr>
 </table>
 
-
-
-<!-- ================= FECHA ================= -->
+<!-- ================= FECHA Y NÚMERO ================= -->
 <div style="text-align:center; margin:6mm 0; font-weight:bold;">
 Fecha de Cotización: ${fecha} &nbsp;&nbsp; | &nbsp;&nbsp; N° Cotización: ${data.N_CONSECUTIVO}
 </div>
 
 <hr style="border:none; border-top:1px solid #000; margin-bottom:6mm;">
 
-<!-- ================= DATOS ================= -->
-<table style="width:100%; font-size:9pt; margin-bottom:6mm;">
+<!-- ================= DATOS DEL PACIENTE ================= -->
+<table style="width:100%; font-size:9pt; margin-bottom:6mm; border-collapse:collapse;">
 <tr>
-<td><b>Señores:</b> ${data.EMPRESA}</td>
-<td><b>Admisión:</b> ${data.ADMISION || ''}</td>
+<td style="padding:1mm 0;"><b>Señores:</b> ${data.EMPRESA || ''}</td>
+<td style="padding:1mm 0;"><b>Admisión:</b> ${data.ADMISION || ''}</td>
 </tr>
 <tr>
-<td><b>Paciente:</b> ${data.NOMBRES}</td>
-<td><b>CC:</b> ${data.DOCUMENTO} &nbsp; <b>TD:</b> ${data.TIPO_DOCUMENTO} &nbsp; <b>Sexo:</b> ${data.SEXO}</td>
+<td style="padding:1mm 0;"><b>Paciente:</b> ${data.NOMBRES || ''}</td>
+<td style="padding:1mm 0;"><b>CC:</b> ${data.DOCUMENTO || ''} &nbsp; <b>TD:</b> ${data.TIPO_DOCUMENTO || ''} &nbsp; <b>Sexo:</b> ${data.SEXO || ''}</td>
 </tr>
 <tr>
-<td><b>Dirección:</b> ${data.DIRECCION || ''}</td>
-<td><b>Depto:</b> ${data.DEPARTAMENTO || ''} &nbsp; <b>Ciudad:</b> ${data.CIUDAD || ''}</td>
+<td style="padding:1mm 0;"><b>Dirección:</b> ${data.DIRECCION || ''}</td>
+<td style="padding:1mm 0;"><b>Depto:</b> ${data.DEPARTAMENTO || ''} &nbsp; <b>Ciudad:</b> ${data.CIUDAD || ''}</td>
 </tr>
 <tr>
-<td><b>Teléfono:</b> ${data.TELEFONO || ''}</td>
-<td></td>
+<td style="padding:1mm 0;"><b>Teléfono:</b> ${data.TELEFONO || ''}</td>
+<td style="padding:1mm 0;"></td>
 </tr>
 </table>
 
 <!-- ================= TABLA SERVICIOS ================= -->
-<table style="width:100%; border-collapse:collapse; font-size:9pt;">
+<table style="width:100%; border-collapse:collapse; font-size:9pt; margin-bottom:6mm;">
 <thead>
 <tr style="background:#d9d9d9;">
-<th style="border:1px solid #000;">Cups</th>
-<th style="border:1px solid #000;">Descripción</th>
-<th style="border:1px solid #000;">Cantidad</th>
-<th style="border:1px solid #000;">Vr. Unitario</th>
-<th style="border:1px solid #000;">Vr. Desc</th>
-<th style="border:1px solid #000;">% Desc</th>
-<th style="border:1px solid #000;">Vr. Total</th>
+<th style="border:1px solid #000; padding:2mm;">Cups</th>
+<th style="border:1px solid #000; padding:2mm;">Descripción</th>
+<th style="border:1px solid #000; padding:2mm;">Cantidad</th>
+<th style="border:1px solid #000; padding:2mm;">Vr. Unitario</th>
+<th style="border:1px solid #000; padding:2mm;">Vr. Desc</th>
+<th style="border:1px solid #000; padding:2mm;">% Desc</th>
+<th style="border:1px solid #000; padding:2mm;">Vr. Total</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="border:1px solid #000; text-align:center;">${data.CODIGO_CUPS}</td>
-<td style="border:1px solid #000;">${data.SERVICIO_COTIZADO}</td>
-<td style="border:1px solid #000; text-align:center;">1</td>
-<td style="border:1px solid #000; text-align:right;">$ ${moneda(valor)}</td>
-<td style="border:1px solid #000; text-align:right;">$ ${moneda(desc)}</td>
-<td style="border:1px solid #000; text-align:center;">${porc}%</td>
-<td style="border:1px solid #000; text-align:right;">$ ${moneda(total)}</td>
+<td style="border:1px solid #000; text-align:center; padding:2mm;">${data.CODIGO_CUPS || ''}</td>
+<td style="border:1px solid #000; padding:2mm;">${data.SERVICIO_COTIZADO || ''}</td>
+<td style="border:1px solid #000; text-align:center; padding:2mm;">1</td>
+<td style="border:1px solid #000; text-align:right; padding:2mm;">$ ${moneda(valor)}</td>
+<td style="border:1px solid #000; text-align:right; padding:2mm;">$ ${moneda(desc)}</td>
+<td style="border:1px solid #000; text-align:center; padding:2mm;">${porc}%</td>
+<td style="border:1px solid #000; text-align:right; padding:2mm;">$ ${moneda(total)}</td>
 </tr>
 </tbody>
 </table>
 
 <!-- ================= OBSERVACIÓN ================= -->
-<div style="margin-top:6mm;">
+<div style="margin-top:6mm; margin-bottom:8mm;">
 <b>Observación</b><br>
-${data.OBSERVACION}
+<div style="border:1px solid #000; padding:3mm; min-height:20mm; margin-top:1mm;">
+${data.OBSERVACION || ''}
+</div>
 </div>
 
 <hr style="border:none; border-top:1px solid #000; margin:8mm 0;">
 
 <!-- ================= TOTALES ================= -->
 <table style="width:100%; font-size:9pt;">
-<tr><td style="text-align:right;">Subtotal: $ ${moneda(valor)}</td></tr>
-<tr><td style="text-align:right;">Descuento: $ ${moneda(desc)}</td></tr>
-<tr><td style="text-align:right; font-size:11pt;"><b>Total: $ ${moneda(total)}</b></td></tr>
+<tr><td style="text-align:right; padding:1mm;">Subtotal: $ ${moneda(valor)}</td></tr>
+<tr><td style="text-align:right; padding:1mm;">Descuento: $ ${moneda(desc)}</td></tr>
+<tr><td style="text-align:right; font-size:11pt; padding:2mm 0;"><b>Total: $ ${moneda(total)}</b></td></tr>
 </table>
 
 </div>
@@ -258,8 +260,6 @@ ${data.OBSERVACION}
 
     previewDiv.innerHTML = html;
 }
-
-    
     // Función para guardar y crear PDF
     async function guardarYCrearPDF() {
         mostrarMensaje('info', '⏳ Procesando...');
@@ -532,4 +532,5 @@ ${data.OBSERVACION}
 
     // Inicializar
     mostrarMensaje('info', 'Complete los campos obligatorios (*) para generar la cotización');
+
 });
