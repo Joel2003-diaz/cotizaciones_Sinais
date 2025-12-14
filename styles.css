@@ -34,48 +34,40 @@ body {
 }
 
 .container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
-    max-width: 1800px;
+    max-width: 1200px;
     margin: 0 auto;
-    min-height: calc(100vh - 40px);
 }
 
-/* Contenedores principales */
-.form-container,
-.preview-container {
+.main-title {
+    text-align: center;
+    color: var(--text-color);
+    font-size: 2rem;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 3px solid var(--primary-color);
+}
+
+.section-title {
+    text-align: center;
+    color: var(--primary-color);
+    font-size: 1.2rem;
+    margin-bottom: 30px;
+    font-weight: normal;
+}
+
+/* Contenedor principal del formulario */
+.form-container {
     background: var(--white);
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
-    overflow: hidden;
-}
-
-.form-container {
-    padding: 25px;
+    padding: 30px;
     overflow-y: auto;
-    max-height: calc(100vh - 40px);
-}
-
-.preview-container {
-    display: flex;
-    flex-direction: column;
-}
-
-/* Títulos */
-.section-title {
-    color: var(--text-color);
-    font-size: 1.4rem;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--primary-color);
-    font-weight: bold;
 }
 
 /* Secciones del formulario */
 .form-section {
-    margin-bottom: 25px;
-    padding: 15px;
+    margin-bottom: 30px;
+    padding: 20px;
     background: var(--light-gray);
     border-radius: var(--border-radius);
     border-left: 4px solid var(--primary-color);
@@ -102,10 +94,18 @@ body {
     color: var(--info-color) !important;
 }
 
+/* Cabecera de sección con botón */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
 /* Filas y grupos del formulario */
 .form-row {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 15px;
     margin-bottom: 15px;
 }
@@ -116,7 +116,7 @@ body {
 }
 
 .form-group.full-width {
-    grid-column: span 2;
+    grid-column: 1 / -1;
 }
 
 .form-group label {
@@ -166,23 +166,71 @@ body {
     min-height: 60px;
 }
 
-/* Validación de formularios */
-.form-group input:invalid,
-.form-group textarea:invalid {
-    border-color: var(--danger-color);
+/* Estilos para productos */
+.producto-item {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    margin-bottom: 15px;
+    position: relative;
 }
 
-.form-group input:valid,
-.form-group textarea:valid {
-    border-color: var(--success-color);
+.producto-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--border-color);
+}
+
+.producto-header span {
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+}
+
+/* Sección de totales */
+.totales-section {
+    background: var(--white);
+    border: 2px solid var(--primary-color);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.total-row:last-child {
+    border-bottom: none;
+}
+
+.total-final {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--success-color);
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 2px solid var(--primary-color) !important;
 }
 
 /* Botones */
 .action-buttons {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 15px;
-    margin-top: 25px;
+    margin-top: 30px;
     padding-top: 20px;
     border-top: 1px solid #eee;
 }
@@ -223,96 +271,6 @@ body {
 .btn-warning { background: var(--warning-color); color: var(--white); }
 .btn-danger { background: var(--danger-color); color: var(--white); }
 
-/* Vista previa */
-.preview-header {
-    padding: 20px;
-    background: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.preview-actions {
-    display: flex;
-    gap: 10px;
-}
-
-.cotizacion-preview {
-    flex: 1;
-    padding: 20px;
-    background: var(--white);
-    overflow: auto;
-    display: flex;
-    flex-direction: column;
-}
-
-.preview-placeholder {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #f8f9fa;
-}
-
-.placeholder-content {
-    text-align: center;
-    color: #6c757d;
-    padding: 40px;
-}
-
-.placeholder-icon {
-    font-size: 48px;
-    margin-bottom: 20px;
-    opacity: 0.5;
-}
-
-.placeholder-content h3 {
-    color: #495057;
-    margin-bottom: 10px;
-}
-
-/* Estilos para la vista previa de cotización */
-.cotizacion-preview table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 10px 0;
-    text-align: center;
-    box-shadow: var(--shadow);
-}
-
-.cotizacion-preview th,
-.cotizacion-preview td {
-    border: 1px solid var(--border-color);
-    padding: 12px;
-    text-align: center;
-    transition: background-color 0.2s;
-}
-
-.cotizacion-preview th {
-    background-color: #f2f2f2;
-    font-weight: bold;
-    color: var(--text-color);
-}
-
-.cotizacion-preview tr:hover {
-    background-color: #f9f9f9;
-}
-
-/* Logo styling */
-.logo-container {
-    text-align: center;
-    margin-bottom: 20px; /* Cambiado de 400px a 20px para algo más razonable */
-}
-
-.logo-container img {
-    max-width: 400px;
-    max-height: 200px;
-    object-fit: contain;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
-}
-
 /* Mensajes de respuesta */
 .response-message {
     margin-top: 20px;
@@ -346,30 +304,6 @@ body {
 }
 
 /* Responsive */
-@media (max-width: 1200px) {
-    .container {
-        grid-template-columns: 1fr;
-        gap: 20px;
-    }
-    
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-    
-    .form-group.full-width {
-        grid-column: span 1;
-    }
-    
-    .action-buttons {
-        grid-template-columns: 1fr;
-    }
-    
-    .preview-header {
-        flex-direction: column;
-        gap: 10px;
-    }
-}
-
 @media (max-width: 768px) {
     body {
         padding: 10px;
@@ -379,22 +313,33 @@ body {
         padding: 15px;
     }
     
-    .section-title {
-        font-size: 1.2rem;
+    .main-title {
+        font-size: 1.5rem;
     }
     
-    .btn {
-        padding: 10px 15px;
-        font-size: 0.9rem;
+    .section-title {
+        font-size: 1rem;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        grid-template-columns: 1fr;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
     }
 }
 
 @media print {
     .form-container,
-    .preview-header,
     .btn,
-    .action-buttons,
-    .preview-actions {
+    .action-buttons {
         display: none !important;
     }
     
@@ -403,14 +348,88 @@ body {
         padding: 0 !important;
         margin: 0 !important;
     }
-    
-    .container {
-        display: block !important;
-        max-width: none !important;
+}
+/* Agrega esto al final de tu CSS existente */
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.producto-item {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.producto-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--border-color);
+}
+
+.producto-header span {
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.totales-section {
+    background: var(--white);
+    border: 2px solid var(--primary-color);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.total-row:last-child {
+    border-bottom: none;
+}
+
+.total-final {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--success-color);
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 2px solid var(--primary-color) !important;
+}
+
+@media (max-width: 768px) {
+    .section-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
     }
-    
-    .cotizacion-preview {
-        box-shadow: none !important;
-        border: none !important;
-    }
+}
+
+/* Estilo para campo de solo Google Sheets */
+.form-group textarea[placeholder*="Google Sheets"] {
+    background-color: #f8f9fa;
+    border: 1px dashed #6c757d;
+}
+
+.form-group textarea[placeholder*="Google Sheets"]:focus {
+    background-color: #fff;
+    border: 1px solid #3498db;
 }
