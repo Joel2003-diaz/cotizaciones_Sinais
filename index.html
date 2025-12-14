@@ -10,9 +10,10 @@
 </head>
 <body>
     <div class="container">
-        <!-- Formulario izquierda -->
+        <!-- Solo formulario (sin vista previa) -->
         <div class="form-container">
-            <h2 class="section-title">📝 Formulario de Cotización</h2>
+            <h1 class="main-title">📋 Generador de Cotizaciones</h1>
+            <h2 class="section-title">Clínica Regional de Especialistas Sinais Vitais S.A.S</h2>
             
             <form id="cotizacionForm">
                 <!-- Información básica (para Google Sheets) -->
@@ -52,7 +53,7 @@
                     
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="NOMBRES">Nombre Paciente *</label>
+                            <label for="NOMBRES">Nombres Paciente *</label>
                             <input type="text" id="NOMBRES" name="NOMBRES" required 
                                 placeholder="Apellidos y Nombres">
                         </div>
@@ -80,39 +81,78 @@
                         </div>
                     </div>
                     
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="CODIGO_CUPS">Código CUPS</label>
-                            <input type="text" id="CODIGO_CUPS" name="CODIGO_CUPS" 
-                                placeholder="Ej: 750101">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="SERVICIO_COTIZADO">Servicio *</label>
-                            <input type="text" id="SERVICIO_COTIZADO" name="SERVICIO_COTIZADO" required 
-                                placeholder="Descripción del servicio">
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="VALOR">Valor Unitario *</label>
-                            <input type="number" id="VALOR" name="VALOR" min="0" step="1000" required 
-                                placeholder="$">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="PORCENTAJE_DESCUENTO">% Descuento *</label>
-                            <input type="number" id="PORCENTAJE_DESCUENTO" name="PORCENTAJE_DESCUENTO" 
-                                min="0" max="100" step="0.1" value="0" required>
-                        </div>
-                    </div>
-                    
+                    <!-- OBSERVACIÓN ADICIONAL (SOLO GOOGLE SHEETS) -->
                     <div class="form-row">
                         <div class="form-group full-width">
-                            <label for="OBSERVACION">Observación *</label>
-                            <textarea id="OBSERVACION" name="OBSERVACION" rows="2" required 
-                                    placeholder="Observación principal"></textarea>
+                            <label for="OBSERVACION_ADICIONAL">Observación Adicional (Solo para Google Sheets)</label>
+                            <textarea id="OBSERVACION_ADICIONAL" name="OBSERVACION_ADICIONAL" rows="2" 
+                                    placeholder="Esta observación solo se guardará en Google Sheets, no aparecerá en el PDF"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PRODUCTOS / SERVICIOS -->
+                <div class="form-section" id="productosSection">
+                    <div class="section-header">
+                        <h3>Productos / Servicios</h3>
+                        <button type="button" id="agregarProductoBtn" class="btn btn-success btn-sm">
+                            ➕ Agregar Producto
+                        </button>
+                    </div>
+                    
+                    <div id="productosContainer">
+                        <!-- Producto 1 -->
+                        <div class="producto-item" data-index="0">
+                            <div class="producto-header">
+                                <span>Producto #1</span>
+                                <button type="button" class="btn-eliminar-producto btn-danger btn-sm" data-index="0">
+                                    ✖ Eliminar
+                                </button>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group full-width">
+                                    <label for="SERVICIO_COTIZADO_0">Descripción *</label>
+                                    <input type="text" class="servicio-cotizado" name="SERVICIO_COTIZADO[]" required 
+                                        placeholder="Descripción del servicio" data-index="0">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="CANTIDAD_0">Cantidad *</label>
+                                    <input type="number" class="cantidad" name="CANTIDAD[]" min="1" value="1" required 
+                                        placeholder="Cantidad" data-index="0">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="VALOR_0">Valor Unitario *</label>
+                                    <input type="number" class="valor-unitario" name="VALOR[]" min="0" step="1000" required 
+                                        placeholder="$" data-index="0">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="PORCENTAJE_DESCUENTO_0">% Descuento *</label>
+                                    <input type="number" class="porcentaje-descuento" name="PORCENTAJE_DESCUENTO[]" 
+                                        min="0" max="100" step="0.1" value="0" required data-index="0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Totales -->
+                    <div class="totales-section">
+                        <div class="total-row">
+                            <span>Subtotal:</span>
+                            <span id="subtotal">$ 0</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Descuento Total:</span>
+                            <span id="descuento-total">$ 0</span>
+                        </div>
+                        <div class="total-row total-final">
+                            <span>TOTAL:</span>
+                            <span id="total-final">$ 0</span>
                         </div>
                     </div>
                 </div>
@@ -155,52 +195,34 @@
                                 placeholder="Ej: CESAR">
                         </div>
                     </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label for="OBSERVACION_GENERAL">Observación General (Para PDF) *</label>
+                            <textarea id="OBSERVACION_GENERAL" name="OBSERVACION_GENERAL" rows="3" required 
+                                    placeholder="Esta observación aparecerá en el PDF"></textarea>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Botones de acción -->
                 <div class="action-buttons">
                     <button type="button" id="vaciarFormulario" class="btn btn-secondary">
-                        🗑️ Vaciar Formulario
-                    </button>
-                    <button type="button" id="previsualizarBtn" class="btn btn-warning">
-                        👁️ Previsualizar
+                        🗑️ Vaciar Todo
                     </button>
                     <button type="button" id="guardarImprimirBtn" class="btn btn-success">
                         💾 Guardar + PDF
                     </button>
                     <button type="button" id="imprimirBtn" class="btn btn-primary" disabled>
-                        🖨️ Imprimir
+                        🖨️ Solo Imprimir
                     </button>
                     <button type="button" id="descargarPdfBtn" class="btn btn-primary" disabled>
-                        📥 Descargar PDF
+                        📥 Solo PDF
                     </button>
                 </div>
                 
                 <div id="responseMessage" class="response-message"></div>
             </form>
-        </div>
-
-        <!-- Vista previa derecha -->
-        <div class="preview-container">
-            <div class="preview-header">
-                <h2 class="section-title">👁️ Vista Previa</h2>
-                <div class="preview-actions">
-                    <button type="button" id="imprimirPreviewBtn" class="btn btn-primary" disabled>
-                        🖨️ Imprimir
-                    </button>
-                </div>
-            </div>
-            <div class="cotizacion-preview" id="cotizacionPreview">
-                <div class="preview-placeholder">
-                    <div class="placeholder-content">
-                        <div class="placeholder-icon">📋</div>
-                        <h3>Vista Previa de Cotización</h3>
-                        <p>Complete los campos obligatorios (*)</p>
-                        <p>y haga clic en "Previsualizar"</p>
-                        <small>Los datos marcados con * se guardarán en Google Sheets</small>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
