@@ -8,260 +8,216 @@ document.addEventListener('DOMContentLoaded', function() {
     // Elementos DOM
     const form = document.getElementById('cotizacionForm');
     const vaciarBtn = document.getElementById('vaciarFormulario');
-    const previsualizarBtn = document.getElementById('previsualizarBtn');
     const guardarImprimirBtn = document.getElementById('guardarImprimirBtn');
     const imprimirBtn = document.getElementById('imprimirBtn');
     const descargarPdfBtn = document.getElementById('descargarPdfBtn');
-    const imprimirPreviewBtn = document.getElementById('imprimirPreviewBtn');
+    const agregarProductoBtn = document.getElementById('agregarProductoBtn');
+    const productosContainer = document.getElementById('productosContainer');
     const responseDiv = document.getElementById('responseMessage');
-    const previewDiv = document.getElementById('cotizacionPreview');
+    
+    // Elementos de totales
+    const subtotalElement = document.getElementById('subtotal');
+    const descuentoTotalElement = document.getElementById('descuento-total');
+    const totalFinalElement = document.getElementById('total-final');
 
     // Configurar fecha actual
     const today = new Date();
     document.getElementById('FECHA_COTIZACION').value = today.toISOString().split('T')[0];
 
     // Valores por defecto
-    document.getElementById('PORCENTAJE_DESCUENTO').value = '0';
     document.getElementById('TIPO_DOCUMENTO').value = 'CC';
     document.getElementById('SEXO').value = 'M';
 
     // Event listeners
     vaciarBtn.addEventListener('click', vaciarFormulario);
-    previsualizarBtn.addEventListener('click', previsualizarCotizacion);
     guardarImprimirBtn.addEventListener('click', guardarYCrearPDF);
     imprimirBtn.addEventListener('click', imprimirCotizacion);
     descargarPdfBtn.addEventListener('click', generarPDF);
-    imprimirPreviewBtn.addEventListener('click', imprimirCotizacion);
+    agregarProductoBtn.addEventListener('click', agregarProducto);
 
-    // Validación en tiempo real
+    // Validación en tiempo real y cálculo de totales
     form.addEventListener('input', function() {
         const valido = form.checkValidity();
         if (valido) {
-            generarVistaPrevia();
+            calcularTotales();
             habilitarBotones(true);
         } else {
             habilitarBotones(false);
         }
     });
 
+    // Delegación de eventos para eliminar productos
+    productosContainer.addEventListener('click', function(e) {
+        if (e.target.classList.contains('btn-eliminar-producto')) {
+            const index = e.target.getAttribute('data-index');
+            eliminarProducto(index);
+        }
+    });
+
+    // Inicializar con un producto
+    let productoIndex = 1;
+
+    // Función para agregar nuevo producto
+    function agregarProducto() {
+        const productoHTML = `
+            <div class="producto-item" data-index="${productoIndex}">
+                <div class="producto-header">
+                    <span>Producto #${productoIndex + 1}</span>
+                    <button type="button" class="btn-eliminar-producto btn-danger btn-sm" data-index="${productoIndex}">
+                        ✖ Eliminar
+                    </button>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label for="SERVICIO_COTIZADO_${productoIndex}">Descripción *</label>
+                        <input type="text" class="servicio-cotizado" name="SERVICIO_COTIZADO[]" required 
+                            placeholder="Descripción del servicio" data-index="${productoIndex}">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="CANTIDAD_${productoIndex}">Cantidad *</label>
+                        <input type="number" class="cantidad" name="CANTIDAD[]" min="1" value="1" required 
+                            placeholder="Cantidad" data-index="${productoIndex}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="VALOR_${productoIndex}">Valor Unitario *</label>
+                        <input type="number" class="valor-unitario" name="VALOR[]" min="0" step="1000" required 
+                            placeholder="$" data-index="${productoIndex}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="PORCENTAJE_DESCUENTO_${productoIndex}">% Descuento *</label>
+                        <input type="number" class="porcentaje-descuento" name="PORCENTAJE_DESCUENTO[]" 
+                            min="0" max="100" step="0.1" value="0" required data-index="${productoIndex}">
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        productosContainer.insertAdjacentHTML('beforeend', productoHTML);
+        productoIndex++;
+        
+        mostrarMensaje('success', '✅ Producto agregado correctamente');
+        calcularTotales();
+    }
+
+    // Función para eliminar producto
+    function eliminarProducto(index) {
+        const producto = document.querySelector(`.producto-item[data-index="${index}"]`);
+        if (producto && productosContainer.children.length > 1) {
+            if (confirm('¿Está seguro de eliminar este producto?')) {
+                producto.remove();
+                renumerarProductos();
+                productoIndex--;
+                calcularTotales();
+                mostrarMensaje('info', '🗑️ Producto eliminado');
+            }
+        } else if (productosContainer.children.length === 1) {
+            mostrarMensaje('error', '❌ Debe tener al menos un producto');
+        }
+    }
+
+    // Función para renumerar productos
+    function renumerarProductos() {
+        const productos = document.querySelectorAll('.producto-item');
+        productos.forEach((producto, index) => {
+            producto.setAttribute('data-index', index);
+            producto.querySelector('.producto-header span').textContent = `Producto #${index + 1}`;
+            
+            // Actualizar todos los inputs dentro del producto
+            const inputs = producto.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.setAttribute('data-index', index);
+                input.id = input.id.replace(/\d+$/, index);
+            });
+            
+            // Actualizar botón de eliminar
+            const btnEliminar = producto.querySelector('.btn-eliminar-producto');
+            btnEliminar.setAttribute('data-index', index);
+        });
+    }
+
+    // Función para calcular totales
+    function calcularTotales() {
+        let subtotal = 0;
+        let descuentoTotal = 0;
+        
+        const productos = document.querySelectorAll('.producto-item');
+        productos.forEach(producto => {
+            const cantidad = parseFloat(producto.querySelector('.cantidad').value) || 0;
+            const valorUnitario = parseFloat(producto.querySelector('.valor-unitario').value) || 0;
+            const porcentajeDescuento = parseFloat(producto.querySelector('.porcentaje-descuento').value) || 0;
+            
+            const valorProducto = cantidad * valorUnitario;
+            const descuentoProducto = valorProducto * (porcentajeDescuento / 100);
+            
+            subtotal += valorProducto;
+            descuentoTotal += descuentoProducto;
+        });
+        
+        const totalFinal = subtotal - descuentoTotal;
+        
+        // Formatear valores en pesos colombianos
+        const moneda = v => new Intl.NumberFormat('es-CO', { 
+            style: 'currency', 
+            currency: 'COP',
+            maximumFractionDigits: 0 
+        }).format(v);
+        
+        subtotalElement.textContent = moneda(subtotal);
+        descuentoTotalElement.textContent = moneda(descuentoTotal);
+        totalFinalElement.textContent = moneda(totalFinal);
+    }
+
     // Función para vaciar formulario
     function vaciarFormulario() {
         if (confirm('¿Está seguro de que desea vaciar todo el formulario?')) {
             form.reset();
             document.getElementById('FECHA_COTIZACION').value = today.toISOString().split('T')[0];
-            document.getElementById('PORCENTAJE_DESCUENTO').value = '0';
             document.getElementById('TIPO_DOCUMENTO').value = 'CC';
             document.getElementById('SEXO').value = 'M';
             
-            resetearVistaPrevia();
+            // Mantener solo el primer producto
+            const productos = document.querySelectorAll('.producto-item');
+            productos.forEach((producto, index) => {
+                if (index > 0) {
+                    producto.remove();
+                }
+            });
+            
+            // Resetear el primer producto
+            const primerProducto = document.querySelector('.producto-item');
+            if (primerProducto) {
+                primerProducto.querySelector('.cantidad').value = 1;
+                primerProducto.querySelector('.valor-unitario').value = '';
+                primerProducto.querySelector('.porcentaje-descuento').value = 0;
+                primerProducto.querySelector('.servicio-cotizado').value = '';
+            }
+            
+            productoIndex = 1;
+            calcularTotales();
+            habilitarBotones(false);
             mostrarMensaje('info', '📝 Formulario listo para nueva cotización');
         }
-    }
-
-    // Función para previsualizar
-    function previsualizarCotizacion() {
-        if (!form.checkValidity()) {
-            form.reportValidity();
-            return;
-        }
-        generarVistaPrevia();
-        habilitarBotones(true);
-        mostrarMensaje('success', '✅ Vista previa generada correctamente');
     }
 
     // Función para habilitar/deshabilitar botones
     function habilitarBotones(habilitar) {
         imprimirBtn.disabled = !habilitar;
         descargarPdfBtn.disabled = !habilitar;
-        imprimirPreviewBtn.disabled = !habilitar;
     }
 
-    // Función para resetear vista previa
-    function resetearVistaPrevia() {
-        previewDiv.innerHTML = `
-            <div class="preview-placeholder">
-                <div class="placeholder-content">
-                    <div class="placeholder-icon">📋</div>
-                    <h3>Vista Previa de Cotización</h3>
-                    <p>Complete los campos obligatorios (*)</p>
-                    <p>y haga clic en "Previsualizar"</p>
-                    <small>Los datos marcados con * se guardarán en Google Sheets</small>
-                </div>
-            </div>
-        `;
-        habilitarBotones(false);
-    }
-
-    // Función para generar vista previa con diseño EXACTO
-// Función para generar vista previa con diseño EXACTO - VERSIÓN CORREGIDA
-function generarVistaPrevia() {
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData);
-
-    const valor = Number(data.VALOR) || 0;
-    const porc = Number(data.PORCENTAJE_DESCUENTO) || 0;
-    const desc = valor * (porc / 100);
-    const total = valor - desc;
-
-    const moneda = v =>
-        new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(v);
-
-    const fecha = new Date(data.FECHA_COTIZACION).toLocaleDateString('es-CO');
-
-    const html = `
-<div id="pdfContent" style="
-    width:210mm;
-    min-height:297mm;
-    padding:20mm;
-    box-sizing:border-box;
-    font-family:Arial, sans-serif;
-    font-size:9pt;
-    color:#000;
-">
-
-<!-- ================= CABECERA ================= -->
-<table style="
-    width:100%;
-    border-collapse:collapse;
-    border:1px solid #000;
-    table-layout:fixed;
-">
-<tr style="height:30mm;"> <!-- Ajusté la altura -->
-
-<!-- LOGO - COLUMNA IZQUIERDA -->
-<td style="
-    width:22%;
-    border:1px solid #000;
-    text-align:center;
-    vertical-align:middle;
-    padding:0;
-">
-    <div style="
-        height:100%;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        padding:1mm;
-    ">
-        <img src="${LOGO_PATH}" style="
-            max-height:25mm;   /* Ajuste para mantener proporción */
-            max-width:100%;
-            object-fit:contain;
-        " onerror="this.style.display='none'">
-    </div>
-</td>
-
-<!-- TEXTO CENTRAL -->
-<td style="
-    width:58%;
-    border:1px solid #000;
-    text-align:center;
-    font-size:9pt;
-    padding:3mm;
-    vertical-align:middle;
-    line-height:1.4;
-">
-    <b style="font-size:11pt; display:block; margin-bottom:2mm;">COTIZACIONES</b>
-    CLINICA REGIONAL DE ESPECIALISTAS SINAIS VITAIS S.A.S<br>
-    NIT. 900498069-1<br>
-    CALLE 18 # 16 - 09 BOSCONIA CESAR<br>
-    Teléfono: 5781068
-</td>
-
-<!-- DATOS DERECHA -->
-<td style="
-    width:20%;  /* Ajusté de 22% a 20% para mejor balance */
-    border:1px solid #000;
-    font-size:8pt;
-    padding:3mm;
-    vertical-align:middle;
-    line-height:1.4;
-">
-    <b>Código:</b><br>
-    <b>Versión:</b><br>
-    <b>Fecha:</b> ${fecha}<br>
-    <b>Página:</b> 1 de 1
-</td>
-</tr>
-</table>
-
-<!-- ================= FECHA Y NÚMERO ================= -->
-<div style="text-align:center; margin:6mm 0; font-weight:bold;">
-Fecha de Cotización: ${fecha} &nbsp;&nbsp; | &nbsp;&nbsp; N° Cotización: ${data.N_CONSECUTIVO}
-</div>
-
-<hr style="border:none; border-top:1px solid #000; margin-bottom:6mm;">
-
-<!-- ================= DATOS DEL PACIENTE ================= -->
-<table style="width:100%; font-size:9pt; margin-bottom:6mm; border-collapse:collapse;">
-<tr>
-<td style="padding:1mm 0;"><b>Señores:</b> ${data.EMPRESA || ''}</td>
-<td style="padding:1mm 0;"><b>Admisión:</b> ${data.ADMISION || ''}</td>
-</tr>
-<tr>
-<td style="padding:1mm 0;"><b>Paciente:</b> ${data.NOMBRES || ''}</td>
-<td style="padding:1mm 0;"><b>CC:</b> ${data.DOCUMENTO || ''} &nbsp; <b>TD:</b> ${data.TIPO_DOCUMENTO || ''} &nbsp; <b>Sexo:</b> ${data.SEXO || ''}</td>
-</tr>
-<tr>
-<td style="padding:1mm 0;"><b>Dirección:</b> ${data.DIRECCION || ''}</td>
-<td style="padding:1mm 0;"><b>Depto:</b> ${data.DEPARTAMENTO || ''} &nbsp; <b>Ciudad:</b> ${data.CIUDAD || ''}</td>
-</tr>
-<tr>
-<td style="padding:1mm 0;"><b>Teléfono:</b> ${data.TELEFONO || ''}</td>
-<td style="padding:1mm 0;"></td>
-</tr>
-</table>
-
-<!-- ================= TABLA SERVICIOS ================= -->
-<table style="width:100%; border-collapse:collapse; font-size:9pt; margin-bottom:6mm;">
-<thead>
-<tr style="background:#d9d9d9;">
-<th style="border:1px solid #000; padding:2mm;">Cups</th>
-<th style="border:1px solid #000; padding:2mm;">Descripción</th>
-<th style="border:1px solid #000; padding:2mm;">Cantidad</th>
-<th style="border:1px solid #000; padding:2mm;">Vr. Unitario</th>
-<th style="border:1px solid #000; padding:2mm;">Vr. Desc</th>
-<th style="border:1px solid #000; padding:2mm;">% Desc</th>
-<th style="border:1px solid #000; padding:2mm;">Vr. Total</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="border:1px solid #000; text-align:center; padding:2mm;">${data.CODIGO_CUPS || ''}</td>
-<td style="border:1px solid #000; padding:2mm;">${data.SERVICIO_COTIZADO || ''}</td>
-<td style="border:1px solid #000; text-align:center; padding:2mm;">1</td>
-<td style="border:1px solid #000; text-align:right; padding:2mm;">$ ${moneda(valor)}</td>
-<td style="border:1px solid #000; text-align:right; padding:2mm;">$ ${moneda(desc)}</td>
-<td style="border:1px solid #000; text-align:center; padding:2mm;">${porc}%</td>
-<td style="border:1px solid #000; text-align:right; padding:2mm;">$ ${moneda(total)}</td>
-</tr>
-</tbody>
-</table>
-
-<!-- ================= OBSERVACIÓN ================= -->
-<div style="margin-top:6mm; margin-bottom:8mm;">
-<b>Observación</b><br>
-<div style="border:1px solid #000; padding:3mm; min-height:20mm; margin-top:1mm;">
-${data.OBSERVACION || ''}
-</div>
-</div>
-
-<hr style="border:none; border-top:1px solid #000; margin:8mm 0;">
-
-<!-- ================= TOTALES ================= -->
-<table style="width:100%; font-size:9pt;">
-<tr><td style="text-align:right; padding:1mm;">Subtotal: $ ${moneda(valor)}</td></tr>
-<tr><td style="text-align:right; padding:1mm;">Descuento: $ ${moneda(desc)}</td></tr>
-<tr><td style="text-align:right; font-size:11pt; padding:2mm 0;"><b>Total: $ ${moneda(total)}</b></td></tr>
-</table>
-
-</div>
-`;
-
-    previewDiv.innerHTML = html;
-}
     // Función para guardar y crear PDF
     async function guardarYCrearPDF() {
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        
         mostrarMensaje('info', '⏳ Procesando...');
         
         try {
@@ -279,8 +235,36 @@ ${data.OBSERVACION || ''}
         }
     }
 
-    // Función para guardar SOLO LOS DATOS ESPECÍFICOS en Google Sheets
+    // Función para guardar en Google Sheets - INCLUYE OBSERVACIÓN ADICIONAL
     async function guardarEnGoogleSheets() {
+        const productos = [];
+        const productoElements = document.querySelectorAll('.producto-item');
+        
+        productoElements.forEach((producto, index) => {
+            productos.push({
+                SERVICIO_COTIZADO: producto.querySelector('.servicio-cotizado').value,
+                CANTIDAD: producto.querySelector('.cantidad').value,
+                VALOR: producto.querySelector('.valor-unitario').value,
+                PORCENTAJE_DESCUENTO: producto.querySelector('.porcentaje-descuento').value
+            });
+        });
+        
+        // Obtener todos los valores de productos para concatenar
+        let serviciosConcatenados = '';
+        let valoresConcatenados = '';
+        
+        productoElements.forEach((producto, index) => {
+            const servicio = producto.querySelector('.servicio-cotizado').value;
+            const valor = producto.querySelector('.valor-unitario').value;
+            
+            if (index > 0) {
+                serviciosConcatenados += ' | ';
+                valoresConcatenados += ' | ';
+            }
+            serviciosConcatenados += servicio;
+            valoresConcatenados += valor;
+        });
+        
         const datosParaEnviar = {
             N_CONSECUTIVO: document.getElementById('N_CONSECUTIVO').value,
             FECHA_COTIZACION: document.getElementById('FECHA_COTIZACION').value,
@@ -289,11 +273,11 @@ ${data.OBSERVACION || ''}
             NOMBRES: document.getElementById('NOMBRES').value,
             EMPRESA: document.getElementById('EMPRESA').value,
             ESPECIALIDAD: document.getElementById('ESPECIALIDAD').value,
-            CODIGO_CUPS: document.getElementById('CODIGO_CUPS').value,
-            SERVICIO_COTIZADO: document.getElementById('SERVICIO_COTIZADO').value,
-            VALOR: document.getElementById('VALOR').value,
-            PORCENTAJE_DESCUENTO: document.getElementById('PORCENTAJE_DESCUENTO').value,
-            OBSERVACION: document.getElementById('OBSERVACION').value,
+            SERVICIO_COTIZADO: serviciosConcatenados, // Concatenado de todos los servicios
+            VALOR: valoresConcatenados, // Concatenado de todos los valores
+            OBSERVACION_ADICIONAL: document.getElementById('OBSERVACION_ADICIONAL').value,
+            PRODUCTOS_JSON: JSON.stringify(productos), // JSON completo por si lo necesitas
+            OBSERVACION_GENERAL: document.getElementById('OBSERVACION_GENERAL').value,
             FECHA_REGISTRO: new Date().toISOString()
         };
 
@@ -319,31 +303,203 @@ ${data.OBSERVACION || ''}
         }
     }
 
-    // Función OPTIMIZADA para generar PDF EXACTO
+    // Función para generar el HTML del PDF - NO INCLUYE OBSERVACIÓN ADICIONAL
+    function generarContenidoPDF() {
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+        
+        const moneda = v => new Intl.NumberFormat('es-CO', { 
+            maximumFractionDigits: 0 
+        }).format(v);
+        
+        const fecha = new Date(data.FECHA_COTIZACION).toLocaleDateString('es-CO');
+        
+        // Calcular totales para el PDF
+        let subtotalPDF = 0;
+        let descuentoTotalPDF = 0;
+        const productosPDF = [];
+        
+        const cantidadInputs = document.querySelectorAll('.cantidad');
+        const valorInputs = document.querySelectorAll('.valor-unitario');
+        const porcentajeInputs = document.querySelectorAll('.porcentaje-descuento');
+        const servicioInputs = document.querySelectorAll('.servicio-cotizado');
+        
+        for (let i = 0; i < cantidadInputs.length; i++) {
+            const cantidad = parseFloat(cantidadInputs[i].value) || 0;
+            const valorUnitario = parseFloat(valorInputs[i].value) || 0;
+            const porcentajeDescuento = parseFloat(porcentajeInputs[i].value) || 0;
+            const valorProducto = cantidad * valorUnitario;
+            const descuentoProducto = valorProducto * (porcentajeDescuento / 100);
+            
+            productosPDF.push({
+                descripcion: servicioInputs[i].value,
+                cantidad: cantidad,
+                valorUnitario: valorUnitario,
+                porcentajeDescuento: porcentajeDescuento,
+                valorProducto: valorProducto,
+                descuentoProducto: descuentoProducto,
+                totalProducto: valorProducto - descuentoProducto
+            });
+            
+            subtotalPDF += valorProducto;
+            descuentoTotalPDF += descuentoProducto;
+        }
+        
+        const totalFinalPDF = subtotalPDF - descuentoTotalPDF;
+        
+        // Generar HTML para el PDF CON DISEÑO EXACTO COMO LA IMAGEN
+        let tablaProductos = '';
+        productosPDF.forEach(producto => {
+            tablaProductos += `
+                <tr>
+                    <td style="border:1px solid #000; padding:3mm 2mm;">${producto.descripcion || ''}</td>
+                    <td style="border:1px solid #000; text-align:center; padding:3mm 2mm;">${producto.cantidad}</td>
+                    <td style="border:1px solid #000; text-align:right; padding:3mm 2mm;">$ ${moneda(producto.valorUnitario)}</td>
+                    <td style="border:1px solid #000; text-align:right; padding:3mm 2mm;">$ ${moneda(producto.descuentoProducto)}</td>
+                    <td style="border:1px solid #000; text-align:center; padding:3mm 2mm;">${producto.porcentajeDescuento}%</td>
+                    <td style="border:1px solid #000; text-align:right; padding:3mm 2mm;">$ ${moneda(producto.totalProducto)}</td>
+                </tr>
+            `;
+        });
+        
+        return `
+            <div id="pdfContent" style="width:210mm; min-height:297mm; padding:15mm 20mm; box-sizing:border-box; font-family:Arial, sans-serif; font-size:9pt; color:#000; line-height:1.2;">
+            
+                <!-- CABECERA CON LOGO - DISEÑO EXACTO COMO LA IMAGEN -->
+                <table style="width:100%; border-collapse:collapse; border:1px solid #000; margin-bottom:10mm;">
+                    <tr>
+                        <!-- LOGO IZQUIERDA -->
+                        <td style="width:30%; border-right:1px solid #000; text-align:center; padding:5mm; vertical-align:middle;">
+                            <img src="${LOGO_PATH}" style="max-width:100%; max-height:40mm; object-fit:contain;" 
+                                 onerror="this.style.display='none'">
+                        </td>
+                        
+                        <!-- TEXTO CENTRAL -->
+                        <td style="width:40%; border-right:1px solid #000; padding:5mm; vertical-align:middle;">
+                            <div style="text-align:center; font-size:12pt; font-weight:bold; margin-bottom:3mm;">
+                                COTIZACIONES
+                            </div>
+                            <div style="text-align:center; font-size:9pt; line-height:1.3;">
+                                CLINICA REGIONAL DE ESPECIALISTAS SINAIS VITAIS S.A.S<br>
+                                NIT. 900498069-1<br>
+                                CALLE 18 # 16 - 09 BOSCONIA CESAR<br>
+                                Teléfono: 5781068
+                            </div>
+                        </td>
+                        
+                        <!-- DATOS DERECHA -->
+                        <td style="width:30%; padding:5mm; vertical-align:top; font-size:8pt;">
+                            <table style="width:100%;">
+                                <tr>
+                                    <td><strong>Código:</strong></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Versión:</strong></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Fecha:</strong></td>
+                                    <td>${fecha}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Página:</strong></td>
+                                    <td>1 de 1</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- FECHA Y NÚMERO DE COTIZACIÓN -->
+                <div style="text-align:center; font-weight:bold; font-size:10pt; margin-bottom:8mm;">
+                    Fecha de Cotización: ${fecha} &nbsp;&nbsp; | &nbsp;&nbsp; N° Cotización: ${data.N_CONSECUTIVO || ''}
+                </div>
+
+                <hr style="border:none; border-top:1px solid #000; margin-bottom:8mm;">
+
+                <!-- DATOS DEL PACIENTE -->
+                <table style="width:100%; font-size:9pt; margin-bottom:10mm; border-collapse:collapse;">
+                <tr>
+                    <td style="width:50%; padding:1mm 0;"><strong>Señores:</strong> ${data.EMPRESA || ''}</td>
+                    <td style="width:50%; padding:1mm 0;"><strong>Admisión:</strong> ${data.ADMISION || ''}</td>
+                </tr>
+                <tr>
+                    <td style="padding:1mm 0;"><strong>Paciente:</strong> ${data.NOMBRES || ''}</td>
+                    <td style="padding:1mm 0;">
+                        <strong>CC:</strong> ${data.DOCUMENTO || ''} &nbsp; 
+                        <strong>TD:</strong> ${data.TIPO_DOCUMENTO || ''} &nbsp; 
+                        <strong>Sexo:</strong> ${data.SEXO || ''}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:1mm 0;"><strong>Dirección:</strong> ${data.DIRECCION || ''}</td>
+                    <td style="padding:1mm 0;">
+                        <strong>Depto:</strong> ${data.DEPARTAMENTO || ''} &nbsp; 
+                        <strong>Ciudad:</strong> ${data.CIUDAD || ''}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:1mm 0;"><strong>Teléfono:</strong> ${data.TELEFONO || ''}</td>
+                    <td style="padding:1mm 0;"></td>
+                </tr>
+                </table>
+
+                <!-- TABLA DE PRODUCTOS -->
+                <table style="width:100%; border-collapse:collapse; font-size:9pt; margin-bottom:10mm;">
+                <thead>
+                <tr style="background:#f0f0f0;">
+                    <th style="border:1px solid #000; padding:3mm 2mm;">Descripción</th>
+                    <th style="border:1px solid #000; padding:3mm 2mm; width:10%;">Cantidad</th>
+                    <th style="border:1px solid #000; padding:3mm 2mm; width:15%;">Vr. Unitario</th>
+                    <th style="border:1px solid #000; padding:3mm 2mm; width:10%;">Vr. Desc</th>
+                    <th style="border:1px solid #000; padding:3mm 2mm; width:8%;">% Desc</th>
+                    <th style="border:1px solid #000; padding:3mm 2mm; width:12%;">Vr. Total</th>
+                </tr>
+                </thead>
+                <tbody>
+                ${tablaProductos}
+                </tbody>
+                </table>
+
+                <!-- OBSERVACIÓN (SOLO LA GENERAL, NO LA ADICIONAL) -->
+                <div style="margin-bottom:10mm;">
+                    <div style="font-weight:bold; margin-bottom:2mm; font-size:10pt;">Observación</div>
+                    <div style="border:1px solid #000; padding:4mm; min-height:20mm;">
+                        ${data.OBSERVACION_GENERAL || ''}
+                    </div>
+                </div>
+
+                <!-- TOTALES -->
+                <div style="text-align:right; font-size:10pt; margin-top:10mm;">
+                    <div style="margin-bottom:2mm;">Subtotal: $ ${moneda(subtotalPDF)}</div>
+                    <div style="margin-bottom:2mm;">Descuento: $ ${moneda(descuentoTotalPDF)}</div>
+                    <div style="font-size:12pt; font-weight:bold;">Total: $ ${moneda(totalFinalPDF)}</div>
+                </div>
+
+            </div>
+        `;
+    }
+
+    // Función para generar PDF
     async function generarPDF() {
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        
         try {
             mostrarMensaje('info', '⏳ Generando PDF...');
             
-            // Crear elemento temporal con dimensiones EXACTAS para A4
+            // Crear elemento temporal
             const tempDiv = document.createElement('div');
-            tempDiv.style.width = '794px';
-            tempDiv.style.minHeight = '1123px';
-            tempDiv.style.padding = '56px';
-            tempDiv.style.margin = '0';
-            tempDiv.style.background = 'white';
+            tempDiv.innerHTML = generarContenidoPDF();
             tempDiv.style.position = 'fixed';
             tempDiv.style.left = '-9999px';
             tempDiv.style.top = '0';
-            tempDiv.style.fontFamily = 'Arial, sans-serif';
-            tempDiv.style.fontSize = '11pt';
-            tempDiv.style.lineHeight = '1.3';
-            tempDiv.style.boxSizing = 'border-box';
-            
-            // Copiar contenido exacto
-            tempDiv.innerHTML = previewDiv.innerHTML;
             document.body.appendChild(tempDiv);
             
-            // Esperar a que las imágenes se carguen
+            // Esperar a que el logo se cargue
             await new Promise(resolve => {
                 const images = tempDiv.getElementsByTagName('img');
                 if (images.length === 0) {
@@ -362,6 +518,7 @@ ${data.OBSERVACION || ''}
                         };
                         img.onerror = () => {
                             loadedCount++;
+                            console.warn('Logo no se pudo cargar, continuando sin él');
                             if (loadedCount === images.length) resolve();
                         };
                     }
@@ -370,8 +527,8 @@ ${data.OBSERVACION || ''}
                 if (loadedCount === images.length) resolve();
             });
             
-            // Configurar html2canvas con dimensiones FIJAS
-            const canvas = await html2canvas(tempDiv, {
+            // Configurar html2canvas
+            const canvas = await html2canvas(tempDiv.querySelector('#pdfContent'), {
                 scale: 2,
                 useCORS: true,
                 logging: false,
@@ -379,34 +536,29 @@ ${data.OBSERVACION || ''}
                 width: 794,
                 height: 1123,
                 windowWidth: 794,
-                windowHeight: 1123
+                windowHeight: 1123,
+                allowTaint: true
             });
             
             // Remover elemento temporal
             document.body.removeChild(tempDiv);
             
-            // Crear PDF con tamaño exacto A4
+            // Crear PDF
             const pdf = new jsPDF({
                 orientation: 'portrait',
                 unit: 'mm',
                 format: 'a4',
-                compress: true,
-                precision: 100
+                compress: true
             });
             
-            // Calcular dimensiones para llenar toda la página
+            // Agregar imagen al PDF
             const imgWidth = 210;
             const imgHeight = 297;
-            
-            // Agregar imagen al PDF ocupando toda la página
-            pdf.addImage(canvas.toDataURL('image/png', 1.0), 'PNG', 
-                0, 0, imgWidth, imgHeight, '', 'FAST');
-            
-            // Generar nombre del archivo
-            const numero = document.getElementById('N_CONSECUTIVO').value || 'sin-numero';
-            const nombreArchivo = `Cotizacion_${numero}.pdf`;
+            pdf.addImage(canvas.toDataURL('image/png', 1.0), 'PNG', 0, 0, imgWidth, imgHeight);
             
             // Descargar PDF
+            const numero = document.getElementById('N_CONSECUTIVO').value || 'sin-numero';
+            const nombreArchivo = `Cotizacion_${numero}.pdf`;
             pdf.save(nombreArchivo);
             
             mostrarMensaje('success', '✅ PDF generado exitosamente');
@@ -414,51 +566,18 @@ ${data.OBSERVACION || ''}
         } catch (error) {
             console.error('Error generando PDF:', error);
             mostrarMensaje('error', '❌ Error al generar PDF: ' + error.message);
-            
-            // Fallback: intentar con método simple
-            try {
-                const printWindow = window.open('', '_blank');
-                printWindow.document.write(`
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>Cotización ${document.getElementById('N_CONSECUTIVO').value}</title>
-                        <style>
-                            @media print {
-                                @page {
-                                    size: A4;
-                                    margin: 15mm;
-                                }
-                                body {
-                                    font-family: Arial, sans-serif;
-                                    font-size: 11pt;
-                                    line-height: 1.3;
-                                }
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        ${previewDiv.innerHTML}
-                        <script>
-                            window.onload = function() {
-                                window.print();
-                                setTimeout(() => window.close(), 1000);
-                            };
-                        </script>
-                    </body>
-                    </html>
-                `);
-                printWindow.document.close();
-                mostrarMensaje('info', '📄 PDF generado en nueva ventana para impresión');
-            } catch (fallbackError) {
-                console.error('Error fallback:', fallbackError);
-            }
         }
     }
 
     // Función para imprimir directamente
     function imprimirCotizacion() {
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        
         const printWindow = window.open('', '_blank');
+        const contenidoPDF = generarContenidoPDF();
         
         const printContent = `
             <!DOCTYPE html>
@@ -480,29 +599,11 @@ ${data.OBSERVACION || ''}
                             margin: 0;
                             padding: 0;
                         }
-                        table {
-                            border-collapse: collapse;
-                            width: 100%;
-                            font-size: 9pt;
-                        }
-                        th, td {
-                            border: 1px solid #000;
-                            padding: 2mm;
-                            text-align: center;
-                        }
-                        th {
-                            background-color: #f0f0f0;
-                        }
-                    }
-                    @media screen {
-                        body {
-                            padding: 20px;
-                        }
                     }
                 </style>
             </head>
             <body>
-                ${previewDiv.innerHTML}
+                ${contenidoPDF}
                 <script>
                     window.onload = function() {
                         window.print();
@@ -531,6 +632,6 @@ ${data.OBSERVACION || ''}
     }
 
     // Inicializar
+    calcularTotales();
     mostrarMensaje('info', 'Complete los campos obligatorios (*) para generar la cotización');
-
 });
