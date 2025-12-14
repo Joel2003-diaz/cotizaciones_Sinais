@@ -1,0 +1,416 @@
+/* Variables CSS para consistencia */
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #95a5a6;
+    --success-color: #27ae60;
+    --warning-color: #f39c12;
+    --danger-color: #e74c3c;
+    --info-color: #17a2b8;
+    --text-color: #2c3e50;
+    --bg-color: #f5f5f5;
+    --white: #ffffff;
+    --light-gray: #f9f9f9;
+    --border-color: #ddd;
+    --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+    --font-family: 'Arial', sans-serif;
+    --font-size-base: 14px;
+    --border-radius: 4px;
+}
+
+/* Reset y configuración básica */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    background: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.4;
+    padding: 20px;
+}
+
+.container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    max-width: 1800px;
+    margin: 0 auto;
+    min-height: calc(100vh - 40px);
+}
+
+/* Contenedores principales */
+.form-container,
+.preview-container {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.form-container {
+    padding: 25px;
+    overflow-y: auto;
+    max-height: calc(100vh - 40px);
+}
+
+.preview-container {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Títulos */
+.section-title {
+    color: var(--text-color);
+    font-size: 1.4rem;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--primary-color);
+    font-weight: bold;
+}
+
+/* Secciones del formulario */
+.form-section {
+    margin-bottom: 25px;
+    padding: 15px;
+    background: var(--light-gray);
+    border-radius: var(--border-radius);
+    border-left: 4px solid var(--primary-color);
+    transition: var(--transition);
+}
+
+.form-section:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.form-section h3 {
+    color: var(--text-color);
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.pdf-only {
+    background: #e8f4f8 !important;
+    border-left-color: var(--info-color) !important;
+}
+
+.pdf-only h3 {
+    color: var(--info-color) !important;
+}
+
+/* Filas y grupos del formulario */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group.full-width {
+    grid-column: span 2;
+}
+
+.form-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 6px;
+}
+
+.form-group label:after {
+    content: " *";
+    color: var(--danger-color);
+}
+
+.form-group label:not([for*="*"]):after {
+    content: "";
+}
+
+/* Campos de entrada */
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-base);
+    background: var(--white);
+    transition: var(--transition);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: #999;
+    opacity: 1;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+/* Validación de formularios */
+.form-group input:invalid,
+.form-group textarea:invalid {
+    border-color: var(--danger-color);
+}
+
+.form-group input:valid,
+.form-group textarea:valid {
+    border-color: var(--success-color);
+}
+
+/* Botones */
+.action-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-secondary { background: var(--secondary-color); color: var(--white); }
+.btn-primary { background: var(--primary-color); color: var(--white); }
+.btn-success { background: var(--success-color); color: var(--white); }
+.btn-warning { background: var(--warning-color); color: var(--white); }
+.btn-danger { background: var(--danger-color); color: var(--white); }
+
+/* Vista previa */
+.preview-header {
+    padding: 20px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.preview-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.cotizacion-preview {
+    flex: 1;
+    padding: 20px;
+    background: var(--white);
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.preview-placeholder {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+}
+
+.placeholder-content {
+    text-align: center;
+    color: #6c757d;
+    padding: 40px;
+}
+
+.placeholder-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.placeholder-content h3 {
+    color: #495057;
+    margin-bottom: 10px;
+}
+
+/* Estilos para la vista previa de cotización */
+.cotizacion-preview table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    text-align: center;
+    box-shadow: var(--shadow);
+}
+
+.cotizacion-preview th,
+.cotizacion-preview td {
+    border: 1px solid var(--border-color);
+    padding: 12px;
+    text-align: center;
+    transition: background-color 0.2s;
+}
+
+.cotizacion-preview th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+.cotizacion-preview tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* Logo styling */
+.logo-container {
+    text-align: center;
+    margin-bottom: 20px; /* Cambiado de 400px a 20px para algo más razonable */
+}
+
+.logo-container img {
+    max-width: 400px;
+    max-height: 200px;
+    object-fit: contain;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+}
+
+/* Mensajes de respuesta */
+.response-message {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: var(--border-radius);
+    text-align: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.response-message.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.response-message.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.response-message.info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-group.full-width {
+        grid-column: span 1;
+    }
+    
+    .action-buttons {
+        grid-template-columns: 1fr;
+    }
+    
+    .preview-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    
+    .form-container {
+        padding: 15px;
+    }
+    
+    .section-title {
+        font-size: 1.2rem;
+    }
+    
+    .btn {
+        padding: 10px 15px;
+        font-size: 0.9rem;
+    }
+}
+
+@media print {
+    .form-container,
+    .preview-header,
+    .btn,
+    .action-buttons,
+    .preview-actions {
+        display: none !important;
+    }
+    
+    body {
+        background: var(--white) !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    .container {
+        display: block !important;
+        max-width: none !important;
+    }
+    
+    .cotizacion-preview {
+        box-shadow: none !important;
+        border: none !important;
+    }
+}
